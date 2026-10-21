@@ -95,7 +95,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   filter:drop-shadow(0 0 6px #fff6c8);animation:glint 3.2s ease-in-out infinite}
 @keyframes glint{0%,100%{opacity:0;transform:scale(.2) rotate(0)}12%{opacity:1;transform:scale(1) rotate(45deg)}26%{opacity:0;transform:scale(.3) rotate(90deg)}}
 .landing-side{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;max-width:440px}
-.crown{font-size:44px;filter:drop-shadow(0 0 14px #fff6c8);animation:float 4s ease-in-out infinite,fadeUp 1s .9s both}
+.crown{line-height:1;filter:drop-shadow(0 0 14px #fff6c8);animation:float 4s ease-in-out infinite,fadeUp 1s .9s both}
 .title{font-family:var(--script);font-weight:400;font-size:clamp(64px,9vw,112px);line-height:1.05;color:#f7dd8a;
   filter:drop-shadow(0 3px 0 rgba(120,70,20,.55)) drop-shadow(0 0 22px rgba(247,221,138,.55))}
 .title .word{display:inline-block;white-space:nowrap;margin:0 .12em}
@@ -308,3 +308,25 @@ body.has-install .screen[data-screen="intro"]{padding-bottom:calc(120px + var(--
 .screen[data-screen="layout"]{justify-content:flex-start}
 @media (min-width:761px){ .layout-opt{max-height:62vh} .layout-opt.wide{width:min(44vw,calc(62vh * 1.5),560px)} }
 body.has-banner .screen{padding-top:calc(56px + env(safe-area-inset-top))}
+
+/* ---------- Crystal Royale SVG icons (icons.js) ---------- */
+.ico{width:1em;height:1em;display:inline-block;vertical-align:-.16em;overflow:visible;filter:drop-shadow(0 2px 6px rgba(43,20,80,.35))}
+.ico .spk{transform-box:fill-box;transform-origin:center;animation:spk 2.8s ease-in-out infinite;opacity:0}
+.ico g:nth-of-type(2n) .spk{animation-delay:1.1s}
+.ico g:nth-of-type(3n) .spk{animation-delay:1.9s}
+@keyframes spk{0%,100%{opacity:0;transform:scale(.2) rotate(0)}25%{opacity:1;transform:scale(1) rotate(45deg)}55%{opacity:0;transform:scale(.3) rotate(90deg)}}
+.ico .gem{animation:gemglow 3.2s ease-in-out infinite}
+@keyframes gemglow{50%{filter:brightness(1.3) drop-shadow(0 0 3px #fff)}}
+.ico .spk2{transform-box:fill-box;transform-origin:center;animation:spin2 6s linear infinite}
+@keyframes spin2{to{transform:rotate(360deg)}}
+.btn .ico{font-size:1.15em;margin-right:.35em;filter:none}
+.btn-glow .ico{color:#3b1a5c}
+.char .em .ico{font-size:clamp(46px,8.5vw,66px);transition:transform .3s}
+.char.sel .em .ico{animation:icofloat 2.4s ease-in-out infinite}
+@keyframes icofloat{50%{transform:translateY(-6px) scale(1.06)}}
+.crown .ico{font-size:64px}
+.pin-note .ico{font-size:1.3em;margin-right:.3em}
+.cam-badge .ico{font-size:1.3em;margin-right:.25em;filter:none}
+@media (prefers-reduced-motion:reduce){.ico .spk{opacity:.8}}
+.ico.on-gold path{fill:#5c2f9e;stroke:none}
+.ico.on-gold .spk{fill:#fff}

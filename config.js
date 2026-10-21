@@ -3,7 +3,7 @@
  * ============================================================ */
 window.BOOTH_CONFIG = {
   // Paste the /exec URL of THIS event's Apps Script deployment (a new Sheet + script for Meghan's party).
-  API_URL: 'https://script.google.com/macros/s/PASTE_YOUR_DEPLOYMENT_ID/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzAbipZht1ZrfQEy-hU8b8KDi9cpXTYWL58IGO8JbZG5aojASh8aCZ6e6z2XL_Yh58awg/exec',
 
   /* Everything below is a FALLBACK. Once API_URL is set, the "Settings" and
      "Characters" tabs in your Google Sheet override these automatically. */

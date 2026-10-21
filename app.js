@@ -296,7 +296,7 @@
     if (pinBusy || pin.length !== PIN_LEN) return;
     if (!API_READY && CFG.DEMO_PIN && pin === CFG.DEMO_PIN) {   // offline preview only — no server to reach
       state.demo = true; state.token = 'demo'; Sound.magic();
-      toast('Offline preview: no server set, so pictures are stand-ins.', 3200);
+      toast(CFG.EMBED ? 'Preview: the real booth makes these pictures with AI.' : 'Offline preview: no server set, so pictures are stand-ins.', 3200);
       return goLayout();
     }
     pinBusy = true; $('#pinSubmit').disabled = true; $('#pinSubmit').textContent = 'Checking the spirits…';
@@ -323,6 +323,9 @@
     goLayout();
   }
 
+  // Royal looks show the hand-drawn SVG icon for their id; custom looks added in the Sheet fall back to their emoji.
+  const lookIcon = c => (window.ICON && window.ICON_NAMES.includes(c.id)) ? window.ICON(c.id) : `<span class="emo">${c.emoji || '✨'}</span>`;
+
   /* ---------------- CHARACTER (no timer — guests take their time) ---------------- */
   function goCharacter() {
     clearTimers(); state.character = null;
@@ -330,7 +333,7 @@
     state.characters.forEach((c, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'char'; b.style.setProperty('--c', c.color || '#7c3aed');
       b.style.animationDelay = (i * .05) + 's';
-      b.innerHTML = `<span class="em">${c.emoji}</span><b>${c.name}</b><small>${c.tagline || ''}</small>`;
+      b.innerHTML = `<span class="em">${lookIcon(c)}</span><b>${c.name}</b><small>${c.tagline || ''}</small>`;
       b.onclick = () => { state.character = c; Sound.tap(); grid.querySelectorAll('.char').forEach(x => x.classList.toggle('sel', x === b)); $('#charGo').disabled = false; };
       grid.appendChild(b);
     });
@@ -363,7 +366,7 @@
 
   async function goCamera() {
     const c = state.character;
-    $('#camBadge').innerHTML = `${c.emoji} <span>${c.name}</span>`;
+    $('#camBadge').innerHTML = `${lookIcon(c)}<span>${c.name}</span>`;
     $('#camTitle').textContent = 'Strike a Pose!';
     $('#shootBtn').disabled = true; $('#shootBtn').textContent = "I'm Ready!"; $('#camMsg').textContent = 'Starting camera…';
     $('#countdown').textContent = ''; shooting = false; cameraFailed = false; $('#sampleBtn').hidden = true;
@@ -778,8 +781,8 @@
     if (!API_READY) console.warn('[Booth] API_URL not set — running in DEMO mode (PIN 000000).');
     const conf = await apiGet({ action: 'config' });
     // Staff warning: make it obvious when the booth is NOT talking to the real backend.
-    if (!API_READY) staffBanner('⚠️ Offline preview — API_URL in config.js is not set, so pictures are stand-ins (no real AI).');
-    else if (!conf.ok) staffBanner('⚠️ Cannot reach the booth server. In Apps Script: Deploy → Manage deployments → Edit → Execute as "Me", Who has access "Anyone" → New version. Also check API_URL in config.js.');
+    if (!API_READY && !CFG.EMBED) staffBanner('⚠️ Offline preview — API_URL in config.js is not set, so pictures are stand-ins (no real AI).');
+    else if (API_READY && !conf.ok) staffBanner('⚠️ Cannot reach the booth server. In Apps Script: Deploy → Manage deployments → Edit → Execute as "Me", Who has access "Anyone" → New version. Also check API_URL in config.js.');
     if (conf.ok && conf.print) Object.assign(pricing, conf.print);
     if (conf.ok) applySettings(conf.settings || {});
     if (conf.ok && conf.characters && conf.characters.length) {

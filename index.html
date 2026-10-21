@@ -40,14 +40,14 @@
           </div>
         </div>
         <div class="landing-side">
-          <div class="crown" aria-hidden="true">👑</div>
+          <div class="crown" aria-hidden="true"><i data-ico="crown"></i></div>
           <div class="title" id="introTitle" aria-label="Photo Booth"></div>
           <p class="subtitle">Crystal Royale · Meghan turns 7</p>
           <p class="fine">Step into the palace: become royalty, then see yourself in a 3D animated film.</p>
           <div class="intro-actions">
-            <button class="btn btn-glow big" id="startBtn">✨ Enter the Booth</button>
+            <button class="btn btn-glow big" id="startBtn"><i data-ico="sparkle" data-ico-class="on-gold"></i>Enter the Booth</button>
           </div>
-          <p class="pin-note">🎟️ Get your <b>PIN slip</b> at the Photo Booth counter</p>
+          <p class="pin-note"><i data-ico="ticket"></i>Get your <b>PIN slip</b> at the Photo Booth counter</p>
         </div>
       </div>
     </section>
@@ -75,7 +75,7 @@
         </div>
       </header>
       <div class="char-grid" id="charGrid"></div>
-      <button class="btn btn-glow wide sticky" id="charGo" disabled>Continue to the Camera ✨</button>
+      <button class="btn btn-glow wide sticky" id="charGo" disabled><i data-ico="camera"></i>Continue to the Camera</button>
     </section>
 
     <!-- ======= 4. CAMERA (one shot) ======= -->
@@ -89,14 +89,14 @@
       <div class="cam-stage">
         <video id="video" playsinline autoplay muted></video>
         <div class="cam-corners"><i></i><i></i><i></i><i></i></div>
-        <div class="cam-badge" id="camBadge">👑 <span id="camCharName">Crystal Princess</span></div>
+        <div class="cam-badge" id="camBadge"><i data-ico="princess"></i><span id="camCharName">Crystal Princess</span></div>
         <div class="countdown" id="countdown"></div>
         <div class="flash" id="flash"></div>
         <p class="cam-msg" id="camMsg">Starting camera…</p>
       </div>
       <div class="cam-actions">
         <button class="btn btn-glow wide" id="shootBtn" disabled>I'm Ready!</button>
-        <button class="btn btn-ghost wide" id="sampleBtn" hidden>🧑‍🤝‍🧑 Use Sample Photo</button>
+        <button class="btn btn-ghost wide" id="sampleBtn" hidden><i data-ico="people"></i>Use Sample Photo</button>
       </div>
     </section>
 
@@ -137,7 +137,7 @@
         </div>
       </header>
       <div class="layout-grid" id="layoutGrid"></div>
-      <button class="btn btn-glow wide sticky" id="layoutGo">Continue ✨</button>
+      <button class="btn btn-glow wide sticky" id="layoutGo"><i data-ico="sparkle" data-ico-class="on-gold"></i>Continue</button>
     </section>
 
     <!-- ======= 7. RESULT ======= -->
@@ -155,8 +155,8 @@
             </div>
           </div>
           <button class="btn btn-glow wide" id="printBtn" hidden>🖨️ Print 5R Photos · <span class="price-each">₱50</span> each</button>
-          <button class="btn btn-glow wide" id="downloadBtn">⬇️ Save 3 Photos to This Device</button>
-          <button class="btn btn-ghost wide" id="finishBtn">Done — Next Guest</button>
+          <button class="btn btn-glow wide" id="downloadBtn"><i data-ico="download"></i>Save 3 Photos to This Device</button>
+          <button class="btn btn-ghost wide" id="finishBtn"><i data-ico="check"></i>Done — Next Guest</button>
           <p class="muted tiny" id="idleNote"></p>
         </aside>
       </div>
@@ -182,7 +182,7 @@
       <div class="pick-grid" id="saveGrid"></div>
       <p class="muted tiny" id="saveNote"></p>
       <div class="modal-actions">
-        <button class="btn btn-glow" id="saveAll">⬇️ Save All 3</button>
+        <button class="btn btn-glow" id="saveAll"><i data-ico="download"></i>Save All 3</button>
         <button class="btn btn-ghost" id="saveClose">Close</button>
       </div>
     </div>
@@ -230,6 +230,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="config.js"></script>
+  <script src="icons.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
