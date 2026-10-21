@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Crystal Royale Photo Booth</title>
+  <meta name="description" content="Meghan's Crystal Royale 7th birthday — AI photo booth.">
+  <meta name="theme-color" content="#5c2f9e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Crystal Royale">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600&family=Great+Vibes&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ======= Ambient background (persists across screens) ======= -->
+  <div class="sky" aria-hidden="true">
+    <div class="aurora"></div>
+    <div class="rays"></div>
+    <div class="stars"></div>
+    <canvas id="fx"></canvas>
+  </div>
+  <div class="lightning" aria-hidden="true"></div>
+
+  <main id="app">
+    <!-- ======= 1. LANDING: Meghan's Crystal Royale invitation ======= -->
+    <section class="screen active" data-screen="intro" aria-label="Welcome">
+      <div class="landing">
+        <div class="poster-wrap">
+          <div class="poster-clip">
+            <img class="poster" src="frames/landing.jpg" alt="Crystal Royale — Meghan 7. Nov. 8, 2026, Sunday 2:30 PM">
+            <div class="shine"></div>
+            <div class="glints" id="glints"></div>
+          </div>
+        </div>
+        <div class="landing-side">
+          <div class="crown" aria-hidden="true">👑</div>
+          <div class="title" id="introTitle" aria-label="Photo Booth"></div>
+          <p class="subtitle">Crystal Royale · Meghan turns 7</p>
+          <p class="fine">Step into the palace: become royalty, then see yourself in a 3D animated film.</p>
+          <div class="intro-actions">
+            <button class="btn btn-glow big" id="startBtn">✨ Enter the Booth</button>
+          </div>
+          <p class="pin-note">🎟️ Get your <b>PIN slip</b> at the Photo Booth counter</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= 2. PIN ======= -->
+    <section class="screen" data-screen="pin" aria-label="Enter PIN">
+      <div class="panel narrow">
+        <h1 class="h-royal">Enter Your PIN</h1>
+        <p class="muted">Type the 6-digit PIN printed on your PIN slip.</p>
+        <p class="pin-note small">No PIN yet? Get a <b>PIN slip</b> at the Photo Booth counter.</p>
+        <div class="pin-boxes" id="pinBoxes" aria-live="polite"></div>
+        <input id="pinInput" class="sr-only" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="PIN code">
+        <div class="keypad" id="keypad"></div>
+        <button class="btn btn-glow wide" id="pinSubmit" disabled>Open the Palace Gates</button>
+        <p class="error" id="pinError" role="alert"></p>
+      </div>
+    </section>
+
+    <!-- ======= 3. CHARACTER (no timer) ======= -->
+    <section class="screen" data-screen="character" aria-label="Choose a character">
+      <header class="bar">
+        <div>
+          <h1 class="h-royal">Choose Your Royal Look</h1>
+          <p class="muted">Everyone in the photo will wear it. Take your time.</p>
+        </div>
+      </header>
+      <div class="char-grid" id="charGrid"></div>
+      <button class="btn btn-glow wide sticky" id="charGo" disabled>Continue to the Camera ✨</button>
+    </section>
+
+    <!-- ======= 4. CAMERA (one shot) ======= -->
+    <section class="screen" data-screen="camera" aria-label="Take your photo">
+      <header class="bar center">
+        <div>
+          <h1 class="h-royal" id="camTitle">Strike a Pose!</h1>
+          <p class="muted">One shot only · 10-second countdown · fit everyone inside the frame, faces to the camera.</p>
+        </div>
+      </header>
+      <div class="cam-stage">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="cam-corners"><i></i><i></i><i></i><i></i></div>
+        <div class="cam-badge" id="camBadge">👑 <span id="camCharName">Crystal Princess</span></div>
+        <div class="countdown" id="countdown"></div>
+        <div class="flash" id="flash"></div>
+        <p class="cam-msg" id="camMsg">Starting camera…</p>
+      </div>
+      <div class="cam-actions">
+        <button class="btn btn-glow wide" id="shootBtn" disabled>I'm Ready!</button>
+        <button class="btn btn-ghost wide" id="sampleBtn" hidden>🧑‍🤝‍🧑 Use Sample Photo</button>
+      </div>
+    </section>
+
+    <!-- ======= 5. GENERATING ======= -->
+    <section class="screen" data-screen="generating" aria-label="Creating your photo">
+      <div class="panel narrow center">
+        <div class="gem" aria-hidden="true">
+          <div class="gem-sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <svg viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#e2c6ff"/><stop offset="1" stop-color="#9b6bdc"/></linearGradient>
+              <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd6ee"/><stop offset="1" stop-color="#b07ae6"/></linearGradient>
+            </defs>
+            <path d="M60 8 92 40 60 112 28 40Z" fill="url(#g1)"/>
+            <path d="M60 8 92 40H28Z" fill="url(#g2)" opacity=".9"/>
+            <path d="M28 40h64L60 112Z" fill="#c9a5f2" opacity=".55"/>
+            <path d="M60 8v104M44 40l16 72 16-72" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/>
+          </svg>
+        </div>
+        <p class="step-chip" id="genStep">Step 1 of 2</p>
+        <h1 class="h-royal" id="genTitle">Creating Your Royal Portrait…</h1>
+        <p class="muted" id="genMsg">Polishing the palace crystals</p>
+        <div class="progress"><i id="genBar"></i></div>
+        <img id="shotPreview" class="shot-preview" alt="Your photo">
+        <p class="error" id="genError" role="alert"></p>
+        <p class="muted tiny" id="genDetail"></p>
+        <button class="btn btn-glow" id="genRetry" hidden>Try Again</button>
+        <button class="btn btn-ghost" id="genOther" hidden>Pick Another Character</button>
+      </div>
+    </section>
+
+    <!-- ======= 3a. BACKGROUND (chosen before the photo, so the camera matches its shape) ======= -->
+    <section class="screen" data-screen="layout" aria-label="Choose a background">
+      <header class="bar">
+        <div>
+          <h1 class="h-royal">Choose Your Background</h1>
+          <p class="muted">Your two royal photos will appear in this frame.</p>
+        </div>
+      </header>
+      <div class="layout-grid" id="layoutGrid"></div>
+      <button class="btn btn-glow wide sticky" id="layoutGo">Continue ✨</button>
+    </section>
+
+    <!-- ======= 7. RESULT ======= -->
+    <section class="screen" data-screen="result" aria-label="Your photo">
+      <div class="result">
+        <div class="result-photo"><img id="finalImg" alt="Your Crystal Royale photo"></div>
+        <aside class="result-side">
+          <h1 class="h-royal">Simply Royal!</h1>
+          <div class="qr-card">
+            <div id="qr" class="qr"></div>
+            <div>
+              <b>Scan to download</b>
+              <p class="muted small">Scan with your phone to get all 3 photos: the framed collage, your Crystal Royale portrait and your 3D animated film photo.</p>
+              <p class="muted tiny" id="qrNote"></p>
+            </div>
+          </div>
+          <button class="btn btn-glow wide" id="printBtn" hidden>🖨️ Print 5R Photos · <span class="price-each">₱50</span> each</button>
+          <button class="btn btn-glow wide" id="downloadBtn">⬇️ Save 3 Photos to This Device</button>
+          <button class="btn btn-ghost wide" id="finishBtn">Done — Next Guest</button>
+          <p class="muted tiny" id="idleNote"></p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ======= PWA install sheet (first opening) ======= -->
+  <div class="install" id="installSheet" hidden role="dialog" aria-labelledby="installTitle">
+    <img src="icons/icon-192.png" alt="" width="56" height="56">
+    <div class="install-text">
+      <b id="installTitle">Install Crystal Royale Booth</b>
+      <span id="installHint">Add it to your home screen for full-screen magic.</span>
+    </div>
+    <button class="btn btn-glow sm" id="installBtn">Install</button>
+    <button class="icon-btn" id="installClose" aria-label="Close">✕</button>
+  </div>
+
+  <!-- ======= Save photos (3 downloads) ======= -->
+  <div class="modal" id="saveModal" hidden role="dialog" aria-labelledby="saveTitle">
+    <div class="modal-card wide">
+      <h2 class="h-royal" id="saveTitle">Save Your Photos</h2>
+      <p class="muted small">Three pictures are yours to keep — free.</p>
+      <div class="pick-grid" id="saveGrid"></div>
+      <p class="muted tiny" id="saveNote"></p>
+      <div class="modal-actions">
+        <button class="btn btn-glow" id="saveAll">⬇️ Save All 3</button>
+        <button class="btn btn-ghost" id="saveClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= Paid 5R prints ======= -->
+  <div class="modal" id="printModal" hidden role="dialog" aria-labelledby="printTitle">
+    <div class="modal-card wide">
+      <div id="printPick">
+        <h2 class="h-royal" id="printTitle">Print 5R Photos</h2>
+        <p class="muted small">5 × 7 in prints · <b id="priceEach">₱50</b> each. Choose which photos and how many.</p>
+        <div class="pick-grid" id="printGrid"></div>
+        <div class="order-bar">
+          <span id="orderSummary">No photos selected</span>
+          <b id="orderTotal">₱0</b>
+        </div>
+        <div class="pay-step" id="payStep" hidden>
+          <p class="small"><b>Pay <span id="payAmount">₱0</span> at the counter.</b> Staff will enter the code to start printing.</p>
+          <div class="pay-row">
+            <input id="staffCode" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Staff code" aria-label="Staff code">
+            <button class="btn btn-glow" id="payConfirm">Confirm &amp; Print</button>
+          </div>
+          <p class="muted tiny" id="demoCodeHint" hidden>Offline preview staff code: <b>1234</b></p>
+        </div>
+        <p class="error" id="printError" role="alert"></p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="printClose">Cancel</button>
+        </div>
+      </div>
+      <div id="printDone" hidden>
+        <h2 class="h-royal">Printing…</h2>
+        <p class="muted small" id="printDoneMsg"></p>
+        <div class="print-strip" id="printStrip"></div>
+        <p class="muted tiny" id="printNote"></p>
+        <div class="modal-actions">
+          <button class="btn btn-glow" id="printAgain">🖨️ Print Again</button>
+          <button class="btn btn-ghost" id="printDoneClose">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <div id="printArea" aria-hidden="true"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your Crystal Royale Photos</title>
+  <meta name="theme-color" content="#5c2f9e">
+  <link rel="icon" href="icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Great+Vibes&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--night:#2b1450;--gold:#f7dd8a;--bone:#fffaff;--muted:#eadcfb;--line:rgba(247,221,138,.5);--card:rgba(62,30,110,.6)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:'Quicksand',system-ui,sans-serif;font-weight:500;color:var(--bone);text-align:center;
+      background:radial-gradient(110% 60% at 50% 0%,#c9a5f2,#9566d6 30%,#5c2f9e 62%,#2b1450) fixed;
+      padding:20px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.6;background-image:
+      radial-gradient(1.5px 1.5px at 12% 18%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 32% 62%,#fff 50%,transparent 51%),
+      radial-gradient(1.3px 1.3px at 58% 14%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 82% 42%,#fff 50%,transparent 51%),
+      radial-gradient(1.4px 1.4px at 90% 80%,#fff 50%,transparent 51%);background-size:340px 340px;animation:tw 5s ease-in-out infinite alternate}
+    @keyframes tw{to{opacity:.25}}
+    .script{font-family:'Great Vibes',cursive;font-size:clamp(48px,13vw,76px);line-height:1;margin:6px 0 0;
+      background:linear-gradient(180deg,#fff7d6,#f7dd8a 45%,#d39a3a 80%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 2px 0 rgba(120,70,20,.5)) drop-shadow(0 0 16px rgba(247,221,138,.5))}
+    .eyebrow{font-family:'Cinzel Decorative',Georgia,serif;letter-spacing:.2em;font-size:13px;color:#fbe7a6;margin:0}
+    p{color:var(--muted);margin:0 0 14px}
+    h2{margin:0;font-size:17px;font-family:'Cinzel Decorative',Georgia,serif;color:#fbe7a6}
+    .wrap{max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:18px;position:relative}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(8px)}
+    .card img{width:100%;border-radius:14px;display:block;box-shadow:0 12px 40px #1a0a3388;-webkit-touch-callout:default;background:#b48ae8}
+    .row{display:flex;gap:10px}
+    .btn{flex:1;border:0;border-radius:999px;padding:14px 18px;font:700 17px 'Quicksand',sans-serif;cursor:pointer;text-decoration:none;display:inline-block;
+      background:linear-gradient(180deg,#fbe7a6,#e5b450 55%,#c98f2e);color:#3b1a5c;box-shadow:0 0 18px rgba(247,221,138,.6)}
+    .ghost{background:rgba(255,255,255,.12);border:1px solid var(--line);color:var(--bone);box-shadow:none}
+    .all{width:100%}
+    .spin{font-size:64px;display:inline-block;animation:b 1.6s ease-in-out infinite;margin-top:28vh;filter:drop-shadow(0 0 16px #fff6c8)}
+    @keyframes b{50%{transform:translateY(-12px) rotate(6deg)}}
+    .tiny{font-size:13px;margin:0}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <div id="loading"><span class="spin">👑</span><p>Bringing your photos from the palace…</p></div>
+  <div id="view" class="wrap" hidden>
+    <div>
+      <p class="eyebrow">Crystal Royale · Meghan turns 7</p>
+      <h1 class="script">Your Royal Photos</h1>
+      <p>Thank you for celebrating with us! Here are your 3 photo booth pictures.</p>
+    </div>
+    <button class="btn all" id="saveAll">⬇️ Save All 3 Photos</button>
+    <div id="list" class="wrap"></div>
+    <p class="tiny">On iPhone you can also press and hold a photo → “Save to Photos”.</p>
+    <p class="tiny" id="expiry"></p>
+  </div>
+  <div id="err" hidden><span class="spin">✨</span><h1 class="script">Oh no!</h1><p id="errMsg"></p></div>
+
+  <script src="config.js"></script>
+  <script>
+  (async () => {
+    const CFG = window.BOOTH_CONFIG;
+    const code = new URLSearchParams(location.search).get('c') || '';
+    const $ = id => document.getElementById(id);
+    const fail = m => { $('loading').hidden = true; $('err').hidden = false; $('errMsg').textContent = m; };
+    if (!code) return fail('No photo code in this link.');
+    if (code === 'DEMO') return fail('This is a demo QR. Set API_URL in config.js to get real downloads.');
+
+    // Every call is a POST with a text/plain JSON body (no CORS preflight), like the booth itself.
+    const post = async (action, data) => {
+      const res = await fetch(CFG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                             body: JSON.stringify(Object.assign({ action }, data || {})) });
+      const raw = await res.text();
+      try { return JSON.parse(raw); } catch (x) { return { ok: false, error: 'The photo server is not set up for guests yet (it replied with a webpage). Please tell the booth staff.' }; }
+    };
+    let r;
+    try { r = await post('photo', { c: code }); }
+    catch (e) { return fail('Could not reach the photo server. Please try again in a moment.'); }
+    if (!r.ok) return fail(r.error || 'Photos not found.');
+
+    const photos = r.photos || [{ id: 'collage', label: 'Photo collage', dataUrl: r.dataUrl }];
+    const items = [];
+    for (const p of photos) {
+      const name = `crystal-royale-${code}-${p.id}.jpg`;
+      let url = p.url, file = null, link = p.download;
+      if (p.dataUrl) {                     // older/private mode: the image itself came in the reply
+        const blob = await (await fetch(p.dataUrl)).blob();
+        file = new File([blob], name, { type: 'image/jpeg' }); url = URL.createObjectURL(blob); link = null;
+      }
+      items.push({ name, url, file, link });
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = `<h2></h2><img alt="" loading="lazy"><div class="row"><a class="btn">⬇️ Download</a><button class="btn ghost" hidden>📤 Share</button></div>`;
+      card.querySelector('h2').textContent = p.label;
+      const img = card.querySelector('img'); img.src = url; img.alt = p.label;
+      const [dl, sh] = [card.querySelector('a'), card.querySelector('button')];
+      if (link) { dl.href = link; dl.rel = 'noopener'; }          // Drive sends it as a file download
+      else { dl.href = url; dl.download = name; }
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        sh.hidden = false; sh.onclick = () => navigator.share({ files: [file], title: p.label }).catch(() => {});
+      }
+      $('list').appendChild(card);
+    }
+    $('saveAll').textContent = `⬇️ Save All ${photos.length} Photos`;
+    $('saveAll').onclick = async () => {
+      const files = items.map(i => i.file).filter(Boolean);
+      if (files.length === items.length && navigator.canShare && navigator.canShare({ files })) {
+        try { await navigator.share({ files, title: 'My Crystal Royale photos' }); return; } catch (e) { if (e.name === 'AbortError') return; }
+      }
+      for (const i of items) {
+        const a = Object.assign(document.createElement('a'), i.link ? { href: i.link } : { href: i.url, download: i.name });
+        document.body.appendChild(a); a.click(); a.remove();
+        await new Promise(res => setTimeout(res, 900));
+      }
+    };
+    $('expiry').textContent = `Save them now — photos are removed from the booth after ${r.retentionDays || 7} days for everyone's privacy.`;
+    $('loading').hidden = true; $('view').hidden = false;
+  })();
+  </script>
+</body>
+</html>
