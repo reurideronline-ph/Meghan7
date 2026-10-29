@@ -23,10 +23,13 @@ Both go into the chosen frame. Guests **scan a QR code to download** the collage
 1. **Landing**: the invitation rises in with a burst of light. A shine sweeps across it, sparkles twinkle on the gold lettering, the gold frame glows, crystals float and glitter falls. Then *✨ Enter the Booth*.
 2. **PIN** from the slip handed out at the photo booth counter.
 3. **Choose your background**: Crystal Castle (tall) or Rose Garden Palace (wide). The camera and the AI pictures follow this shape: 1024×1536 or 1536×1024.
-4. **Choose your royal look** (no timer): Crystal Princess, Crystal Prince, Crystal Queen & King, Fairy Godparent, Royal Knight, Unicorn Royalty, Ballet Royale, Rose Garden Royalty, Snow Crystal Royalty.
-5. **Camera**: tap *I'm Ready*, 10-second countdown, one shot.
-6. **AI, step 1 then step 2** (the guest sees step 1 while step 2 runs).
-7. **Result**: QR code and *Save 3 Photos to This Device*. After 3 minutes without a tap it returns to the landing page.
+4. **How would you like your photos?**
+   - **Royal AI Magic (1 shot):** pick a look, take one shot, and get the Crystal Royale portrait plus the 3D animated film photo.
+   - **Actual Photos (2 shots, no AI):** two countdown shots, one per frame window, exactly as taken. Ready right away, with no OpenAI cost. Turn it off with `ACTUAL_PHOTO_ENABLED` in Settings.
+5. **Choose your royal look** (AI only, no timer): Crystal Princess, Crystal Prince, Crystal Queen & King, Fairy Godparent, Royal Knight, Unicorn Royalty, Ballet Royale, Rose Garden Royalty, Snow Crystal Royalty.
+6. **Camera** (full screen): tap *I'm Ready* for a 10-second countdown. AI takes one shot; Actual takes two.
+7. **AI, step 1 then step 2** (the guest sees step 1 while step 2 runs).
+8. **Result**: QR code and *Save 3 Photos to This Device*. After 3 minutes without a tap it returns to the landing page.
 
 ## Setup: use a NEW Sheet + Apps Script for this party
 Keep the Halloween booth separate, so its PINs, photos and settings stay apart.
@@ -35,7 +38,7 @@ Keep the Halloween booth separate, so its PINs, photos and settings stay apart.
 3. Run **`setup`** and allow the permissions. It creates the PINs, Settings, Characters, Photos and Prints tabs, plus the Drive folder **"Crystal Royale Booth – Photos"**.
 4. **Project Settings → Script properties** → add `OPENAI_API_KEY`.
 5. **Deploy → New deployment → Web app** · Execute as **Me** · Who has access **Anyone** → copy the `/exec` URL.
-6. Open that URL in a **private window**. It must say *Crystal Royale Photo Booth API v1 is running*.
+6. Open that URL in a **private window**. It must say *Crystal Royale Photo Booth API v2 is running*.
 7. Paste the URL into `API_URL` in **config.js**, then upload all files to a GitHub repo and turn on GitHub Pages.
 8. **👑 Photo Booth → Generate PINs…** for the slips. Run **🧪 Test AI generation** once.
 

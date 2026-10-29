@@ -83,16 +83,18 @@
       <header class="bar center">
         <div>
           <h1 class="h-royal" id="camTitle">Strike a Pose!</h1>
-          <p class="muted">One shot only · 10-second countdown · fit everyone inside the frame, faces to the camera.</p>
+          <p class="muted" id="camHint">One shot · 10-second countdown · everyone inside the bright area, faces to the camera.</p>
         </div>
       </header>
       <div class="cam-stage">
         <video id="video" playsinline autoplay muted></video>
-        <div class="cam-corners"><i></i><i></i><i></i><i></i></div>
+        <div class="cam-guide" id="camGuide" aria-hidden="true"></div>
         <div class="cam-badge" id="camBadge"><i data-ico="princess"></i><span id="camCharName">Crystal Princess</span></div>
         <div class="countdown" id="countdown"></div>
         <div class="flash" id="flash"></div>
         <p class="cam-msg" id="camMsg">Starting camera…</p>
+        <div class="shot-count" id="shotCount" hidden></div>
+        <img class="first-shot" id="firstShot" alt="Photo 1" hidden>
       </div>
       <div class="cam-actions">
         <button class="btn btn-glow wide" id="shootBtn" disabled>I'm Ready!</button>
@@ -128,6 +130,30 @@
       </div>
     </section>
 
+    <!-- ======= 3b. PHOTO TYPE: AI magic (1 shot) or actual photos (2 shots) ======= -->
+    <section class="screen" data-screen="mode" aria-label="Choose your photo type">
+      <header class="bar center">
+        <div>
+          <h1 class="h-royal">How Would You Like Your Photos?</h1>
+          <p class="muted">Pick one. Both come in your frame with a QR code to download.</p>
+        </div>
+      </header>
+      <div class="mode-grid">
+        <button class="mode-card" type="button" id="modeAI">
+          <span class="mode-ico"><i data-ico="crown"></i></span>
+          <b>Royal AI Magic</b>
+          <span class="mode-sub">1 shot</span>
+          <small>Become Crystal Royale royalty, then a star of a 3D animated film. Takes a minute or two.</small>
+        </button>
+        <button class="mode-card" type="button" id="modeActual">
+          <span class="mode-ico"><i data-ico="camera"></i></span>
+          <b>Actual Photos</b>
+          <span class="mode-sub">2 shots</span>
+          <small>Your real photos exactly as taken, no AI. Ready right away.</small>
+        </button>
+      </div>
+    </section>
+
     <!-- ======= 3a. BACKGROUND (chosen before the photo, so the camera matches its shape) ======= -->
     <section class="screen" data-screen="layout" aria-label="Choose a background">
       <header class="bar">
@@ -150,7 +176,7 @@
             <div id="qr" class="qr"></div>
             <div>
               <b>Scan to download</b>
-              <p class="muted small">Scan with your phone to get all 3 photos: the framed collage, your Crystal Royale portrait and your 3D animated film photo.</p>
+              <p class="muted small" id="qrHint">Scan with your phone to get all 3 photos: the framed collage, your Crystal Royale portrait and your 3D animated film photo.</p>
               <p class="muted tiny" id="qrNote"></p>
             </div>
           </div>

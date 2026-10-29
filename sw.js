@@ -1,6 +1,6 @@
 /* Service worker — caches the app shell & frames so the booth loads instantly.
  * Bump VERSION whenever you change files on GitHub so devices pick up the update. */
-const VERSION = 'crystal-royale-v3';
+const VERSION = 'crystal-royale-v6';
 const SHELL = [
   './', 'index.html', 'download.html', 'styles.css', 'app.js', 'config.js', 'icons.js', 'manifest.webmanifest',
   'frames/landing.jpg', 'frames/frame1.png', 'frames/frame2.png', 'frames/frame1-thumb.jpg', 'frames/frame2-thumb.jpg',

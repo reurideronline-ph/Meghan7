@@ -7,6 +7,9 @@
   'use strict';
   const CFG = window.BOOTH_CONFIG;
   const $ = (s, el = document) => el.querySelector(s);
+  // Crystal Royale web app, hardcoded so the booth still works if an old config.js is served.
+  const HARDCODED_API_URL = 'https://script.google.com/macros/s/AKfycbzAbipZht1ZrfQEy-hU8b8KDi9cpXTYWL58IGO8JbZG5aojASh8aCZ6e6z2XL_Yh58awg/exec';
+  if (!CFG.EMBED && !/^https:\/\/script\.google\.com\/macros\/s\/(?!PASTE)/.test(CFG.API_URL || '')) CFG.API_URL = HARDCODED_API_URL;
   const API_READY = /^https:\/\/script\.google\.com\/macros\/s\/(?!PASTE)/.test(CFG.API_URL);
 
   const state = {
@@ -73,6 +76,7 @@
     }
     if (action === 'animate') return { ok: true, step: 2, image: await fakeAnimated(d.image) };
     if (action === 'poll') return { ok: false, error: 'Nothing running.' };
+    if (action === 'saveActual') return { ok: true };
     if (action === 'save') return { ok: true, shareCode: 'DEMO' };
     if (action === 'printOrder') {
       if (d.staffCode !== CFG.DEMO_STAFF_CODE) return { ok: false, error: `Wrong staff code. (Demo code: ${CFG.DEMO_STAFF_CODE})` };
@@ -314,7 +318,8 @@
       return runStep(res.step || 1, true);
     }
     if (res.stage === 'generated' || res.stage === 'step1') {   // resume after a reload
-      state.character = state.characters.find(c => c.id === res.characterId) || state.characters[0];
+      state.mode = res.characterId === 'actual' ? 'actual' : 'ai';
+      state.character = state.mode === 'actual' ? ACTUAL : (state.characters.find(c => c.id === res.characterId) || state.characters[0]);
       await useImages(res.images.map(toUrl));
       if (res.stage === 'step1') { $('#shotPreview').src = state.images[0].src; return runStep(2); }
       return goLayout();
@@ -324,7 +329,8 @@
   }
 
   // Royal looks show the hand-drawn SVG icon for their id; custom looks added in the Sheet fall back to their emoji.
-  const lookIcon = c => (window.ICON && window.ICON_NAMES.includes(c.id)) ? window.ICON(c.id) : `<span class="emo">${c.emoji || '✨'}</span>`;
+  const lookIcon = c => c.id === 'actual' && window.ICON ? window.ICON('camera')
+    : (window.ICON && window.ICON_NAMES.includes(c.id)) ? window.ICON(c.id) : `<span class="emo">${c.emoji || '✨'}</span>`;
 
   /* ---------------- CHARACTER (no timer — guests take their time) ---------------- */
   function goCharacter() {
@@ -370,26 +376,31 @@
     $('#camTitle').textContent = 'Strike a Pose!';
     $('#shootBtn').disabled = true; $('#shootBtn').textContent = "I'm Ready!"; $('#camMsg').textContent = 'Starting camera…';
     $('#countdown').textContent = ''; shooting = false; cameraFailed = false; $('#sampleBtn').hidden = true;
+    state.shots = []; $('#firstShot').hidden = true; $('#firstShot').removeAttribute('src'); updateShotCount();
+    $('#camHint').textContent = isActual()
+      ? `Two shots · ${CFG.CAMERA_COUNTDOWN}-second countdown each · everyone inside the bright area, faces to the camera.`
+      : `One shot · ${CFG.CAMERA_COUNTDOWN}-second countdown · everyone inside the bright area, faces to the camera.`;
     $('.cam-stage').classList.toggle('landscape', isLandscape()); $('.cam-stage').classList.toggle('portrait', !isLandscape());
     show('camera');
     try {
       state.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } } });
-      const v = $('#video'); v.srcObject = state.stream; await v.play();
+      const v = $('#video'); v.srcObject = state.stream; v.onloadedmetadata = layoutGuide; await v.play(); layoutGuide();
       $('#camMsg').textContent = `Tap “I'm Ready” — you get ${CFG.CAMERA_COUNTDOWN} seconds to pose.`;
       $('#shootBtn').disabled = false;
     } catch (e) {
       cameraFailed = true;
       $('#camMsg').textContent = 'Camera unavailable — allow camera access, or upload a photo.';
-      $('#shootBtn').disabled = false; $('#shootBtn').textContent = '📷 Upload a Photo';
+      $('#shootBtn').disabled = false; $('#shootBtn').textContent = isActual() ? `Upload Photo ${state.shots.length + 1}` : 'Upload a Photo';
       $('#sampleBtn').hidden = API_READY;   // live booth: use the camera or upload a real photo
     }
   }
   $('#shootBtn').addEventListener('click', () => cameraFailed ? fileInput.click() : startCountdown());
-  $('#sampleBtn').addEventListener('click', async () => { Sound.shutter(); const im = await loadImg(samplePhoto()); finishShot(squareCrop(im, im.naturalWidth, im.naturalHeight, false)); });
+  $('#sampleBtn').addEventListener('click', async () => { Sound.shutter(); const im = await loadImg(samplePhoto()); captured(squareCrop(im, im.naturalWidth, im.naturalHeight, false)); });
   fileInput.addEventListener('change', async () => {
     const f = fileInput.files[0]; if (!f) return;
     const img = await loadImg(URL.createObjectURL(f));
-    finishShot(squareCrop(img, img.naturalWidth, img.naturalHeight, false));
+    fileInput.value = '';
+    captured(squareCrop(img, img.naturalWidth, img.naturalHeight, false));
   });
 
   async function startCountdown() {
@@ -403,9 +414,49 @@
     cd.textContent = ''; Sound.shutter();
     const fl = $('#flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
     const v = $('#video');
-    const data = squareCrop(v, v.videoWidth, v.videoHeight, CFG.MIRROR_OUTPUT);
+    const data = visibleCrop(v, CFG.MIRROR_OUTPUT);
     await sleep(500);
-    finishShot(data);
+    captured(data);
+  }
+
+  /* One shot for Royal AI Magic; two shots for Actual Photos. */
+  const isActual = () => state.mode === 'actual';
+  function updateShotCount() {
+    const el = $('#shotCount');
+    if (!isActual()) { el.hidden = true; return; }
+    el.hidden = false; el.textContent = `Photo ${Math.min(state.shots.length + 1, 2)} of 2`;
+  }
+  function captured(dataUrl) {
+    if (!isActual()) return finishShot(dataUrl);
+    state.shots.push(dataUrl);
+    if (state.shots.length < 2) {                 // ready for photo 2
+      shooting = false; updateShotCount(); Sound.magic();
+      const t = $('#firstShot'); t.src = dataUrl; t.hidden = false;
+      $('#camTitle').textContent = 'Great! One More…';
+      $('#shootBtn').disabled = false;
+      $('#shootBtn').textContent = cameraFailed ? 'Upload Photo 2' : "I'm Ready for Photo 2!";
+      $('#camMsg').textContent = cameraFailed ? '' : `Change your pose! You get ${CFG.CAMERA_COUNTDOWN} seconds again.`;
+      return;
+    }
+    finishActual();
+  }
+  async function finishActual() {
+    stopCamera(); clearTimers();
+    show('generating');
+    $('#genStep').textContent = 'Actual Photos · no AI';
+    $('#genTitle').textContent = 'Framing Your Photos…'; $('#genMsg').textContent = 'Placing them in your royal frame';
+    $('#genError').textContent = ''; $('#genDetail').textContent = ''; $('#genRetry').hidden = true; $('#genOther').hidden = true;
+    $('#shotPreview').src = state.shots[0]; $('#genBar').style.width = '60%';
+    const res = await api('saveActual', { token: state.token, size: aiSize(), photos: state.shots.map(d => d.split(',')[1]) }, 120000);
+    if (!res.ok) {
+      $('#genTitle').textContent = 'Could Not Save Yet'; $('#genMsg').textContent = '';
+      $('#genError').textContent = res.error || 'Something went wrong.';
+      if (res.detail) $('#genDetail').textContent = 'Details for staff: ' + res.detail;
+      $('#genRetry').hidden = false; return;
+    }
+    $('#genBar').style.width = '100%'; Sound.magic();
+    await useImages(state.shots);
+    finalize();
   }
   // Crops the shot to the chosen frame's shape: 2:3 portrait (1024×1536) or 3:2 landscape (1536×1024).
   function squareCrop(src, w, h, mirror) {
@@ -414,6 +465,29 @@
     const c = document.createElement('canvas'); c.width = ow; c.height = oh; const g = c.getContext('2d');
     if (mirror) { g.translate(ow, 0); g.scale(-1, 1); }
     g.drawImage(src, (w - sw) / 2, (h - sh) / 2, sw, sh, 0, 0, ow, oh);
+    return c.toDataURL('image/jpeg', .9);
+  }
+  // The live picture fills the screen (object-fit: cover). The photo is the largest frame-shaped
+  // area in the middle of what is visible, so it matches the bright, unshaded part exactly.
+  function guideRect(v) {
+    const stage = $('.cam-stage'), W = stage.clientWidth, H = stage.clientHeight, w = v.videoWidth, h = v.videoHeight;
+    if (!w || !h || !W || !H) return null;
+    const scale = Math.max(W / w, H / h), vw = W / scale, vh = H / scale;
+    const land = isLandscape(), ratio = land ? 1.5 : 2 / 3;
+    let sw = Math.min(vw, vh * ratio), sh = sw / ratio;
+    return { scale, sw, sh, sx: (w - sw) / 2, sy: (h - sh) / 2, ow: land ? 1536 : 1024, oh: land ? 1024 : 1536 };
+  }
+  function layoutGuide() {
+    const v = $('#video'), g = guideRect(v), el = $('#camGuide'); if (!el) return;
+    if (!g) { el.style.width = el.style.height = '0px'; return; }
+    el.style.width = (g.sw * g.scale) + 'px'; el.style.height = (g.sh * g.scale) + 'px';
+  }
+  addEventListener('resize', layoutGuide); addEventListener('orientationchange', () => setTimeout(layoutGuide, 300));
+  function visibleCrop(v, mirror) {
+    const g = guideRect(v); if (!g) return squareCrop(v, v.videoWidth, v.videoHeight, mirror);
+    const c = document.createElement('canvas'); c.width = g.ow; c.height = g.oh; const x = c.getContext('2d');
+    if (mirror) { x.translate(g.ow, 0); x.scale(-1, 1); }
+    x.drawImage(v, g.sx, g.sy, g.sw, g.sh, 0, 0, g.ow, g.oh);
     return c.toDataURL('image/jpeg', .9);
   }
   function stopCamera() { if (state.stream) { state.stream.getTracks().forEach(t => t.stop()); state.stream = null; } }
@@ -482,7 +556,7 @@
     finalize();
   }
   function generate() { return runStep(1); }
-  $('#genRetry').addEventListener('click', () => runStep(genStep));   // same photo — still one shot
+  $('#genRetry').addEventListener('click', () => isActual() ? finishActual() : runStep(genStep));   // same photo(s) — no new shot
   $('#genOther').addEventListener('click', () => { state.keepShot = true; goCharacter(); });   // same photo, new character
   async function useImages(urls) { state.images = await Promise.all(urls.map(loadImg)); }
 
@@ -522,7 +596,17 @@
     show('layout');
   }
   // After a reload with both pictures already made, the frame choice goes straight to the result.
-  $('#layoutGo').addEventListener('click', () => state.images.length >= 2 ? finalize() : goCharacter());
+  $('#layoutGo').addEventListener('click', () => state.images.length >= 2 ? finalize() : goMode());
+
+  /* ---------------- PHOTO TYPE: Royal AI Magic (1 shot) or Actual Photos (2 shots, no AI) ---------------- */
+  const ACTUAL = { id: 'actual', name: 'Actual Photos', emoji: '📷' };
+  function goMode() {
+    clearTimers();
+    if (CFG.ACTUAL_ENABLED === false) { state.mode = 'ai'; return goCharacter(); }
+    show('mode');
+  }
+  $('#modeAI').addEventListener('click', () => { Sound.tap(); state.mode = 'ai'; goCharacter(); });
+  $('#modeActual').addEventListener('click', () => { Sound.tap(); state.mode = 'actual'; state.character = ACTUAL; goCamera(); });
 
   /* ---------------- RESULT ---------------- */
   async function finalize() {
@@ -553,6 +637,9 @@
   function showResult() {
     const L = layoutOf();
     $('.result').classList.toggle('landscape', isLandscape(L)); $('.result-photo').style.aspectRatio = `${L.width} / ${L.height}`;
+    $('#qrHint').textContent = isActual()
+      ? 'Scan with your phone to get all 3 photos: the framed collage and your 2 photos.'
+      : 'Scan with your phone to get all 3 photos: the framed collage, your Crystal Royale portrait and your 3D animated film photo.';
     $('#finalImg').src = state.finalDataUrl; show('result'); FX.swarm(20); Sound.chime(); startIdle();
   }
   async function resumeDone(code) {
@@ -581,8 +668,8 @@
     if (state.photos && state.photos.length) return state.photos;
     return [
       { id: 'collage', label: PHOTO_LABELS.collage, src: state.finalDataUrl },
-      { id: 'photo1', label: PHOTO_LABELS.photo1, src: state.images[0] && state.images[0].src },
-      { id: 'photo2', label: PHOTO_LABELS.photo2, src: state.images[1] && state.images[1].src }
+      { id: 'photo1', label: isActual() ? 'Photo 1' : PHOTO_LABELS.photo1, src: state.images[0] && state.images[0].src },
+      { id: 'photo2', label: isActual() ? 'Photo 2' : PHOTO_LABELS.photo2, src: state.images[1] && state.images[1].src }
     ].filter(p => p.src);
   }
   const money = n => `${pricing.currency}${n.toLocaleString()}`;
@@ -607,6 +694,7 @@
     CFG.CAMERA_COUNTDOWN = Math.round(num(st.CAMERA_COUNTDOWN, CFG.CAMERA_COUNTDOWN));
     CFG.RESULT_IDLE_SECONDS = Math.round(num(st.RESULT_IDLE_SECONDS, CFG.RESULT_IDLE_SECONDS));
     if (typeof st.MIRROR_OUTPUT === 'boolean') CFG.MIRROR_OUTPUT = st.MIRROR_OUTPUT;
+    if (typeof st.ACTUAL_PHOTO_ENABLED === 'boolean') CFG.ACTUAL_ENABLED = st.ACTUAL_PHOTO_ENABLED;
     if (st.LAYOUTS) {
       const want = String(st.LAYOUTS).split(/[\s,]+/).filter(Boolean);
       const picked = want.map(id => ALL_LAYOUTS.find(l => l.id === id)).filter(Boolean);
@@ -740,7 +828,7 @@
     clearTimers(); clearInterval(idleT); idleT = null; stopCamera();
     Object.keys(pages5R).forEach(k => delete pages5R[k]);
     ['#saveModal', '#printModal'].forEach(m => $(m).hidden = true); $('#printArea').innerHTML = '';
-    Object.assign(state, { demo: false, keepShot: false, photos: null, token: null, character: null, photoB64: null, images: [], layoutId: CFG.LAYOUTS[0].id, finalDataUrl: null, shareCode: null });
+    Object.assign(state, { demo: false, keepShot: false, mode: null, shots: [], photos: null, token: null, character: null, photoB64: null, images: [], layoutId: CFG.LAYOUTS[0].id, finalDataUrl: null, shareCode: null });
     $('#shotPreview').removeAttribute('src'); $('#qr').innerHTML = ''; $('#idleNote').textContent = '';
   }
 

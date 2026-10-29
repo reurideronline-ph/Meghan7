@@ -330,3 +330,44 @@ body.has-banner .screen{padding-top:calc(56px + env(safe-area-inset-top))}
 @media (prefers-reduced-motion:reduce){.ico .spk{opacity:.8}}
 .ico.on-gold path{fill:#5c2f9e;stroke:none}
 .ico.on-gold .spk{fill:#fff}
+
+/* ---------- full-screen camera: no border, controls float over the live picture ---------- */
+.screen[data-screen="camera"]{padding:0;justify-content:space-between;overflow:hidden;background:#000}
+.screen[data-screen="camera"] .cam-stage,.screen[data-screen="camera"] .cam-stage.portrait,.screen[data-screen="camera"] .cam-stage.landscape{
+  position:absolute;inset:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;margin:0;border:0;border-radius:0;box-shadow:none;background:#000}
+.screen[data-screen="camera"] .cam-stage video{width:100%;height:100%;object-fit:cover}
+.cam-corners{display:none}
+/* the part that will be in the photo stays bright; outside it is softly shaded (no outline) */
+.cam-guide{position:absolute;left:50%;top:50%;width:0;height:0;transform:translate(-50%,-50%);pointer-events:none;
+  box-shadow:0 0 0 200vmax rgba(26,10,52,.45);transition:width .35s,height .35s}
+.screen[data-screen="camera"] .bar{position:relative;z-index:3;width:100%;max-width:none;margin:0;
+  padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 36px max(16px,env(safe-area-inset-left));
+  background:linear-gradient(180deg,rgba(26,10,52,.78),rgba(26,10,52,0))}
+.screen[data-screen="camera"] .bar .muted{text-shadow:0 1px 4px #000}
+.screen[data-screen="camera"] .cam-badge{top:auto;bottom:calc(var(--safe-b) + 150px);background:rgba(26,10,52,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.screen[data-screen="camera"] .cam-msg{bottom:calc(var(--safe-b) + 112px);padding:0 16px}
+.screen[data-screen="camera"] .cam-actions{position:relative;z-index:3;width:100%;
+  padding:40px max(16px,env(safe-area-inset-right)) calc(18px + var(--safe-b)) max(16px,env(safe-area-inset-left));
+  background:linear-gradient(0deg,rgba(26,10,52,.8),rgba(26,10,52,0))}
+.screen[data-screen="camera"] .countdown{z-index:2;font-size:min(42vw,260px)}
+.screen[data-screen="camera"] .flash{z-index:4}
+body.has-banner .screen[data-screen="camera"]{padding-top:0}
+body.has-banner .screen[data-screen="camera"] .bar{padding-top:calc(48px + env(safe-area-inset-top))}
+
+/* ---------- photo type: AI magic or actual photos ---------- */
+.mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:100%;max-width:760px}
+.mode-card{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:26px 18px;border-radius:24px;
+  border:2px solid var(--line);background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(62,30,110,.7));box-shadow:0 18px 50px #1a0a3355;
+  transition:transform .2s,box-shadow .2s,border-color .2s;opacity:0;animation:fadeUp .6s forwards}
+.mode-card:nth-child(2){animation-delay:.12s}
+.mode-card:hover,.mode-card:focus-visible{transform:translateY(-4px);border-color:var(--ember);box-shadow:var(--glow);outline:none}
+.mode-ico .ico{font-size:clamp(64px,10vw,92px)}
+.mode-card b{font-family:var(--display);font-size:clamp(20px,3vw,26px);color:var(--ember)}
+.mode-sub{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:3px 12px;border-radius:99px;background:rgba(247,221,138,.2);color:#fff5d6}
+.mode-card small{color:var(--muted);font-size:15px;line-height:1.4;max-width:30ch}
+@media (max-width:620px){ .mode-grid{grid-template-columns:1fr;gap:12px} .mode-card{padding:18px 14px} .mode-ico .ico{font-size:58px} }
+/* two-shot camera */
+.shot-count{position:absolute;z-index:3;top:calc(max(14px,env(safe-area-inset-top)) + 92px);left:50%;transform:translateX(-50%);
+  padding:6px 16px;border-radius:99px;background:rgba(26,10,52,.72);border:1px solid var(--line);color:var(--ember);font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.first-shot{position:absolute;z-index:3;right:max(14px,env(safe-area-inset-right));bottom:calc(var(--safe-b) + 150px);width:84px;border-radius:10px;
+  border:2px solid #fff;box-shadow:0 8px 24px #000a;animation:reveal .6s cubic-bezier(.2,.9,.3,1.2)}
